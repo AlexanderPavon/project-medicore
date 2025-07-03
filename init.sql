@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS pacientes (
+  id SERIAL PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  apellido TEXT NOT NULL,
+  peso NUMERIC NOT NULL,
+  talla NUMERIC NOT NULL,
+  diagnostico TEXT NOT NULL
+);

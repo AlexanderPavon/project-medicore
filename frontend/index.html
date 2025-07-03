@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>MediCore</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #378BA4, #E8EDE7);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #0077b6;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .form-group:not(:first-child) {
+      margin-top: 15px;
+    }
+
+    .form-group svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: #888;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 10px 10px 35px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      background-color: #00b4d8;
+      color: white;
+      border: none;
+      font-weight: bold;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0077b6;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      table-layout: fixed;
+      word-wrap: break-word;
+    }
+
+    table th, table td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    td:nth-child(5) {
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column; 
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      height: 100%; 
+    } 
+
+    .actions button {
+      padding: 8px 12px;
+      width: 100px;
+      font-weight: bold;
+      border-radius: 8px;
+      font-size: 14px;
+      background-color: #00b4d8;
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .actions button:hover {
+      background-color: #0077b6;
+    } 
+
+    .actions svg {
+      width: 18px;
+      height: 18px;
+    } 
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MediCore</h1>
+    <form id="pacienteForm">
+      <div class="form-group">
+        <i data-lucide="user"></i>
+        <input type="text" name="nombre" placeholder="Nombre" required>
+      </div>
+      <div class="form-group">
+        <i data-lucide="user-check"></i>
+        <input type="text" name="apellido" placeholder="Apellido" required>
+      </div>
+      <div class="form-group">
+        <i data-lucide="weight"></i>
+        <input type="number" name="peso" step="any" placeholder="Peso en kg" required>
+      </div>
+      <div class="form-group">
+        <i data-lucide="ruler"></i>
+        <input type="number" name="talla" step="any" placeholder="Talla en metros (ej: 1.70)" required>
+      </div>
+      <div class="form-group">
+        <i data-lucide="activity"></i>
+        <input type="text" name="diagnostico" placeholder="Diagnóstico" required>
+      </div>
+      <button type="submit">Guardar</button>
+    </form>
+
+    <!-- 🔍 Buscador con ícono y separación -->
+    <div class="form-group" style="margin-top: 20px;">
+      <i data-lucide="search"></i>
+      <input type="text" id="busqueda" placeholder="Buscar paciente por nombre, apellido o diagnóstico">
+    </div>
+
+    <table id="tablaPacientes">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>Peso (kg)</th>
+          <th>Talla (m)</th>
+          <th>Diagnóstico</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5000/api/pacientes';
+    const form = document.getElementById('pacienteForm');
+    const tbody = document.querySelector('#tablaPacientes tbody');
+    let editandoId = null;
+    let pacientesGlobal = [];
+
+    async function cargarPacientes() {
+      const res = await fetch(API_URL);
+      pacientesGlobal = await res.json();
+      mostrarPacientes(pacientesGlobal);
+    }
+
+    function mostrarPacientes(lista) {
+      tbody.innerHTML = '';
+      lista.forEach(p => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${p.nombre}</td>
+          <td>${p.apellido}</td>
+          <td>${p.peso} kg</td>
+          <td>${p.talla} m</td>
+          <td>${p.diagnostico}</td>
+          <td>
+            <div class="actions">
+              <button onclick="editar(${p.id}, '${p.nombre}', '${p.apellido}', ${p.peso}, ${p.talla}, \`${p.diagnostico}\`)">
+                <i data-lucide="edit"></i>
+              </button>
+              <button onclick="eliminar(${p.id})">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(fila);
+      });
+      lucide.createIcons();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const datos = {
+        nombre: form.nombre.value,
+        apellido: form.apellido.value,
+        peso: parseFloat(form.peso.value),
+        talla: parseFloat(form.talla.value),
+        diagnostico: form.diagnostico.value
+      };
+
+      if (editandoId) {
+        await fetch(`${API_URL}/${editandoId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        });
+        editandoId = null;
+      } else {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        });
+      }
+
+      form.reset();
+      cargarPacientes();
+    });
+
+    async function eliminar(id) {
+      if (confirm("¿Seguro que deseas eliminar este paciente?")) {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        cargarPacientes();
+      }
+    }
+
+    function editar(id, nombre, apellido, peso, talla, diagnostico) {
+      editandoId = id;
+      form.nombre.value = nombre;
+      form.apellido.value = apellido;
+      form.peso.value = peso;
+      form.talla.value = talla;
+      form.diagnostico.value = diagnostico;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById('busqueda').addEventListener('input', (e) => {
+      const texto = e.target.value.toLowerCase();
+      const filtrados = pacientesGlobal.filter(p =>
+        p.nombre.toLowerCase().includes(texto) ||
+        p.apellido.toLowerCase().includes(texto) ||
+        p.diagnostico.toLowerCase().includes(texto)
+      );
+      mostrarPacientes(filtrados);
+    });
+
+    cargarPacientes();
+  </script>
+</body>
+</html>
