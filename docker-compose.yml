@@ -28,14 +28,14 @@ services:
     networks:
       - red_app
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdbdata:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: medicore@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: medicore123
     ports:
       - "5050:80"
     networks:
@@ -45,4 +45,4 @@ networks:
   red_app:
 
 volumes:
-  pgdata:
+  pgdbdata:
